@@ -3,6 +3,7 @@ __pycache__/
 *.sqlite3
 *.db
 backend/.pytest_cache/
+backend/venv/
 frontend/.next/
 frontend/node_modules/
 backend/.env

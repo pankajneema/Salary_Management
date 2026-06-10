@@ -38,7 +38,7 @@ a {
 main {
   width: min(1180px, calc(100% - 32px));
   margin: 0 auto;
-  padding: 32px 0 56px;
+  padding: 20px 0 32px;
 }
 
 .shell {
@@ -50,7 +50,7 @@ main {
 }
 
 .hero {
-  padding: 32px;
+  padding: 16px 20px;
   background:
     linear-gradient(135deg, rgba(27, 111, 106, 0.14), rgba(217, 143, 91, 0.12)),
     var(--panel-strong);
@@ -73,14 +73,14 @@ main {
 
 .hero h1,
 .hero h2 {
-  margin: 14px 0 0;
+  margin: 10px 0 0;
   line-height: 0.95;
   letter-spacing: -0.04em;
 }
 
 .hero h1 {
-  font-size: clamp(2.5rem, 6vw, 5rem);
-  max-width: 11ch;
+  font-size: clamp(1.8rem, 3vw, 2.6rem);
+  max-width: none;
 }
 
 .hero p {
@@ -95,7 +95,7 @@ main {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  margin-top: 22px;
+  margin-top: 16px;
 }
 
 .button,
@@ -122,7 +122,7 @@ main {
 }
 
 .section {
-  padding: 32px;
+  padding: 12px 20px;
 }
 
 .section + .section {
@@ -135,11 +135,48 @@ main {
   gap: 18px;
 }
 
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.summary-card {
+  display: grid;
+  gap: 8px;
+}
+
+.summary-card strong {
+  font-size: 1.5rem;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.summary-card .muted {
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.section-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.section-heading h2,
+.table-card h2 {
+  margin: 0;
+  font-size: 0.95rem;
+  letter-spacing: -0.03em;
+}
+
 .card {
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: 22px;
-  padding: 18px;
+  padding: 12px;
   backdrop-filter: blur(14px);
 }
 
@@ -170,7 +207,28 @@ main {
 table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 840px;
+  min-width: 780px;
+}
+
+.compact-table {
+  min-width: 0;
+}
+
+.compact-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: rgba(246, 239, 230, 0.96);
+  backdrop-filter: blur(10px);
+}
+
+.sort-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0;
+  color: inherit;
+  width: 100%;
 }
 
 th,
@@ -190,6 +248,10 @@ th {
 
 tbody tr:hover {
   background: rgba(27, 111, 106, 0.04);
+}
+
+.compact-table tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.45);
 }
 
 .pill {
@@ -228,28 +290,284 @@ tbody tr:hover {
   gap: 18px;
 }
 
+.table-card {
+  padding: 12px;
+}
+
+.table-card-header {
+  margin-bottom: 6px;
+}
+
+.pagination-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.pagination {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.directory-controls {
+  display: grid;
+  grid-template-columns: 1.5fr repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 8px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.directory-field {
+  display: grid;
+  gap: 6px;
+}
+
+.directory-field label {
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.directory-field input,
+.directory-field select {
+  height: 44px;
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.96);
+  padding: 0 12px;
+  font: inherit;
+  color: var(--text);
+}
+
+.directory-search {
+  min-width: 220px;
+}
+
+.directory-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding-top: 4px;
+}
+
+.directory-controls .button,
+.directory-controls .button-secondary {
+  min-height: 44px;
+}
+
+.csv-transfer-bar {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.csv-transfer-copy h2 {
+  margin: 2px 0 0;
+  font-size: 1rem;
+}
+
+.csv-transfer-copy p {
+  margin: 8px 0 0;
+}
+
+.csv-transfer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.csv-upload-button {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.csv-upload-button input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.csv-transfer-status {
+  margin: 0;
+}
+
+.pager-summary {
+  white-space: nowrap;
+  font-size: 0.9rem;
+}
+
+.pagination-pages {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pagination-button,
+.pagination-page,
+.pagination-ellipsis {
+  min-width: 42px;
+  height: 42px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.pagination-button,
+.pagination-page {
+  background: white;
+  border-color: var(--border);
+  cursor: pointer;
+  font: inherit;
+  appearance: none;
+}
+
+.pagination-page.is-active {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+.pagination-button.is-disabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.pagination-page:hover,
+.pagination-button:hover {
+  border-color: rgba(27, 111, 106, 0.35);
+  transform: translateY(-1px);
+}
+
+.pagination-button:focus-visible,
+.pagination-page:focus-visible,
+.button:focus-visible,
+.button-secondary:focus-visible,
+.sort-link:focus-visible,
+.directory-field input:focus-visible,
+.directory-field select:focus-visible {
+  outline: 2px solid rgba(27, 111, 106, 0.35);
+  outline-offset: 2px;
+}
+
+.distribution-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.distribution-row {
+  display: grid;
+  gap: 8px;
+}
+
+.distribution-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.distribution-track {
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(27, 111, 106, 0.12);
+  overflow: hidden;
+}
+
+.distribution-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent), var(--accent-warm));
+}
+
 @media (max-width: 900px) {
   .stat {
     grid-column: span 6;
   }
 
+  .summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .columns-2 {
     grid-template-columns: 1fr;
+  }
+
+  .directory-controls {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .section-heading {
+    align-items: start;
+    flex-direction: column;
   }
 }
 
 @media (max-width: 640px) {
   main {
     width: min(100% - 20px, 1180px);
-    padding-top: 20px;
+    padding-top: 16px;
   }
 
   .hero,
   .section {
-    padding: 22px;
+    padding: 14px;
+  }
+
+  .summary-grid {
+    grid-template-columns: 1fr;
   }
 
   .stat {
     grid-column: span 12;
+  }
+
+  .pagination {
+    justify-content: center;
+  }
+
+  .directory-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .csv-transfer-actions {
+    flex-direction: column;
+  }
+
+  .csv-transfer-actions .button,
+  .csv-transfer-actions .button-secondary,
+  .csv-upload-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .directory-actions {
+    justify-content: stretch;
+    flex-direction: column;
+  }
+
+  .directory-actions .button,
+  .directory-actions .button-secondary {
+    width: 100%;
+    justify-content: center;
   }
 }

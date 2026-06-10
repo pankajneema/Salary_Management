@@ -26,6 +26,18 @@ export type EmployeeListResponse = {
   total_pages: number;
 };
 
+export type EmployeeListParams = {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  departmentId?: string;
+  country?: string;
+  employmentType?: string;
+  currency?: string;
+  sortBy?: string;
+  sortOrder?: string;
+};
+
 export type AnalyticsSummary = {
   total_employees: number;
   total_active: number;
@@ -55,10 +67,10 @@ export type AnalyticsSummary = {
   }>;
 };
 
-const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+export const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 async function request<T>(path: string): Promise<T> {
-  const response = await fetch(`${baseUrl}${path}`, {
+  const response = await fetch(`${apiBaseUrl}${path}`, {
     cache: "no-store",
   });
 
@@ -69,8 +81,20 @@ async function request<T>(path: string): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-export function fetchEmployees() {
-  return request<EmployeeListResponse>("/api/employees?page=1&page_size=8");
+export function fetchEmployees(params: EmployeeListParams = {}) {
+  const searchParams = new URLSearchParams();
+  searchParams.set("page", String(params.page ?? 1));
+  searchParams.set("page_size", String(params.pageSize ?? 10));
+
+  if (params.search) searchParams.set("search", params.search);
+  if (params.departmentId) searchParams.set("department_id", params.departmentId);
+  if (params.country) searchParams.set("country", params.country);
+  if (params.employmentType) searchParams.set("employment_type", params.employmentType);
+  if (params.currency) searchParams.set("currency", params.currency);
+  if (params.sortBy) searchParams.set("sort_by", params.sortBy);
+  if (params.sortOrder) searchParams.set("sort_order", params.sortOrder);
+
+  return request<EmployeeListResponse>(`/api/employees?${searchParams.toString()}`);
 }
 
 export function fetchAnalytics() {

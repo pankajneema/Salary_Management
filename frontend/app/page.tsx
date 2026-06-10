@@ -1,99 +1,139 @@
 import Link from "next/link";
 
-import { EmployeeTable } from "@/components/EmployeeTable";
-import { StatCard } from "@/components/StatCard";
-import { fetchAnalytics, fetchEmployees } from "@/lib/api";
+import { CsvTransferBar } from "@/components/CsvTransferBar";
+import { DirectoryControls } from "@/components/DirectoryControls";
+import { DirectoryTable } from "@/components/DirectoryTable";
+import { Pagination } from "@/components/Pagination";
+import { fetchAnalytics, fetchDepartments, fetchEmployees } from "@/lib/api";
 
-export default async function HomePage() {
-  const [employeesResult, analyticsResult] = await Promise.allSettled([
-    fetchEmployees(),
+type HomePageProps = {
+  searchParams?: {
+    page?: string;
+    search?: string;
+    department_id?: string;
+    country?: string;
+    employment_type?: string;
+    currency?: string;
+    sort_by?: string;
+    sort_order?: string;
+  };
+};
+
+export default async function HomePage({ searchParams }: HomePageProps) {
+  const currentPage = Number(searchParams?.page ?? "1") || 1;
+  const currentSortBy = searchParams?.sort_by ?? "created_at";
+  const currentSortOrder = searchParams?.sort_order ?? "desc";
+  const [employeesResult, departmentsResult, analyticsResult] = await Promise.allSettled([
+    fetchEmployees({
+      page: currentPage,
+      pageSize: 10,
+      search: searchParams?.search,
+      departmentId: searchParams?.department_id,
+      country: searchParams?.country,
+      employmentType: searchParams?.employment_type,
+      currency: searchParams?.currency,
+      sortBy: currentSortBy,
+      sortOrder: currentSortOrder,
+    }),
+    fetchDepartments(),
     fetchAnalytics(),
   ]);
 
   const employees = employeesResult.status === "fulfilled" ? employeesResult.value.items : [];
+  const employeePager =
+    employeesResult.status === "fulfilled"
+      ? {
+          page: employeesResult.value.page,
+          totalPages: employeesResult.value.total_pages,
+          total: employeesResult.value.total,
+          pageSize: employeesResult.value.page_size,
+        }
+      : null;
+  const departments = departmentsResult.status === "fulfilled" ? departmentsResult.value : [];
   const analytics = analyticsResult.status === "fulfilled" ? analyticsResult.value : null;
+  const analyticsDepartmentCount = analytics?.by_department.length ?? null;
+  const currentParams = {
+    search: searchParams?.search,
+    department_id: searchParams?.department_id,
+    country: searchParams?.country,
+    employment_type: searchParams?.employment_type,
+    currency: searchParams?.currency,
+    sort_by: currentSortBy,
+    sort_order: currentSortOrder,
+  };
 
   return (
     <main>
       <div className="shell">
         <section className="hero">
-          <span className="eyebrow">ACME Corp HR workspace</span>
-          <h1>Manage salary data without the spreadsheet chaos.</h1>
-          <p>
-            A focused salary directory with CRUD operations, salary history tracking, analytics, and CSV import/export
-            support for 10,000+ employees.
-          </p>
+          <h1>Salary management</h1>
           <div className="hero-actions">
-            <Link href="/" className="button">
-              Employee directory
-            </Link>
             <Link href="/analytics" className="button-secondary">
               View analytics
             </Link>
+            <Link href="/" className="button">
+              Employee directory
+            </Link>
           </div>
         </section>
 
         <section className="section">
-          <p className="kicker">Dashboard</p>
-          <div className="grid">
-            <StatCard
-              label="Active employees"
-              value={analytics ? analytics.total_active.toLocaleString() : "—"}
-              note="Records currently marked as active"
-            />
-            <StatCard
-              label="Departments tracked"
-              value={analytics ? String(analytics.by_department.length) : "—"}
-              note="Computed from live analytics"
-            />
-            <StatCard
-              label="Countries covered"
-              value={analytics ? String(analytics.by_country.length) : "—"}
-              note="Each country can use its native currency"
-            />
-            <StatCard
-              label="Top earners shown"
-              value={analytics ? String(analytics.top_earners.length) : "—"}
-              note="Preview of the current salary leaders"
-            />
+          <div className="summary-grid">
+            <article className="card summary-card">
+              <p className="kicker">Employee directory</p>
+              <strong>{employeePager?.total?.toLocaleString() ?? "—"}</strong>
+              <span className="muted">Total employees in the current dataset</span>
+            </article>
+            <article className="card summary-card">
+              <p className="kicker">Active records</p>
+              <strong>{analytics?.total_active?.toLocaleString() ?? "—"}</strong>
+              <span className="muted">Currently active employee profiles</span>
+            </article>
+            <article className="card summary-card">
+              <p className="kicker">Analytics</p>
+              <strong>{analyticsDepartmentCount !== null ? analyticsDepartmentCount.toLocaleString() : "—"}</strong>
+              <span className="muted">Department groups in payroll analytics</span>
+            </article>
           </div>
         </section>
 
-        <section className="section columns-2">
-          <article className="card stack">
-            <div>
-              <p className="kicker">Quick read</p>
-              <h2>What the UI covers</h2>
-            </div>
-            <ul className="muted">
-              <li>Searchable, paginated employee directory</li>
-              <li>Department-aware salary summaries</li>
-              <li>Salary history and change tracking</li>
-              <li>CSV import/export for migration work</li>
-            </ul>
-          </article>
-
-          <article className="card stack">
-            <div>
-              <p className="kicker">Backend status</p>
-              <h2>Connected to the FastAPI API</h2>
-            </div>
-            <p className="muted">
-              The page reads from <code>/api/employees</code> and <code>/api/analytics/summary</code>. If the API is
-              offline, the shell still renders and the metrics fall back to placeholders.
-            </p>
-          </article>
-        </section>
-
         <section className="section">
-          <p className="kicker">Directory preview</p>
+          <DirectoryControls
+            departments={departments}
+            current={{
+              search: searchParams?.search,
+              departmentId: searchParams?.department_id,
+              country: searchParams?.country,
+              employmentType: searchParams?.employment_type,
+              currency: searchParams?.currency,
+              sortBy: currentSortBy,
+              sortOrder: currentSortOrder,
+            }}
+          />
+          <CsvTransferBar queryParams={currentParams} />
           {employees.length > 0 ? (
-            <EmployeeTable employees={employees} />
+            <>
+              <DirectoryTable
+                employees={employees}
+                currentParams={currentParams}
+                currentSortBy={currentSortBy}
+                currentSortOrder={currentSortOrder}
+              />
+              {employeePager ? (
+                <div className="pagination-row">
+                  <Pagination
+                    currentPage={employeePager.page}
+                    totalPages={employeePager.totalPages}
+                    currentParams={currentParams}
+                  />
+                </div>
+              ) : null}
+            </>
           ) : (
             <article className="card">
               <h2>No records loaded yet</h2>
               <p className="muted">
-                Start the backend, seed the database, and the first eight employees will appear here.
+                Start the backend, seed the database, and the first ten employees will appear here.
               </p>
             </article>
           )}
