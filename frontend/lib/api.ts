@@ -104,3 +104,59 @@ export function fetchAnalytics() {
 export function fetchDepartments() {
   return request<Department[]>("/api/departments");
 }
+
+export async function createEmployee(data: {
+  full_name: string;
+  job_title: string;
+  department_id: string;
+  employment_type: string;
+  country: string;
+  salary_amount: string;
+  currency: string;
+  date_of_joining: string;
+}): Promise<Employee> {
+  const response = await fetch(`${apiBaseUrl}/api/employees`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to create employee: ${response.status}`);
+  }
+
+  return response.json() as Promise<Employee>;
+}
+
+export async function updateEmployee(
+  employeeId: string,
+  data: Partial<{
+    full_name: string;
+    job_title: string;
+    department_id: string;
+    employment_type: string;
+    country: string;
+  }>
+): Promise<Employee> {
+  const response = await fetch(`${apiBaseUrl}/api/employees/${employeeId}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to update employee: ${response.status}`);
+  }
+
+  return response.json() as Promise<Employee>;
+}
+
+export async function deleteEmployee(employeeId: string): Promise<void> {
+  const response = await fetch(`${apiBaseUrl}/api/employees/${employeeId}`, {
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to delete employee: ${response.status}`);
+  }
+}

@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { CsvTransferBar } from "@/components/CsvTransferBar";
 import { DirectoryControls } from "@/components/DirectoryControls";
-import { DirectoryTable } from "@/components/DirectoryTable";
+import { EmployeeTableWrapper } from "@/components/EmployeeTableWrapper";
 import { Pagination } from "@/components/Pagination";
 import { fetchAnalytics, fetchDepartments, fetchEmployees } from "@/lib/api";
 
@@ -113,8 +113,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           <CsvTransferBar queryParams={currentParams} />
           {employees.length > 0 ? (
             <>
-              <DirectoryTable
+              <EmployeeTableWrapper
                 employees={employees}
+                departments={departments}
                 currentParams={currentParams}
                 currentSortBy={currentSortBy}
                 currentSortOrder={currentSortOrder}

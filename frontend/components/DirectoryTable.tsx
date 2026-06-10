@@ -7,6 +7,8 @@ type DirectoryTableProps = {
   currentParams: Record<string, string | undefined>;
   currentSortBy: string;
   currentSortOrder: string;
+  onEdit?: (employee: Employee) => void;
+  onDelete?: (employee: Employee) => void;
 };
 
 const sortableColumns = [
@@ -17,7 +19,7 @@ const sortableColumns = [
   { key: "salary_amount", label: "Salary" },
 ];
 
-export function DirectoryTable({ employees, currentParams, currentSortBy, currentSortOrder }: DirectoryTableProps) {
+export function DirectoryTable({ employees, currentParams, currentSortBy, currentSortOrder, onEdit, onDelete }: DirectoryTableProps) {
   const buildHref = (sortBy: string) => {
     const nextParams = new URLSearchParams();
     if (currentParams.search) nextParams.set("search", currentParams.search);
@@ -46,6 +48,7 @@ export function DirectoryTable({ employees, currentParams, currentSortBy, curren
                 </th>
               );
             })}
+            {(onEdit || onDelete) && <th>Actions</th>}
           </tr>
         </thead>
         <tbody>
@@ -66,6 +69,45 @@ export function DirectoryTable({ employees, currentParams, currentSortBy, curren
                   {employee.currency} {Number(employee.salary_amount).toLocaleString()}
                 </span>
               </td>
+              {(onEdit || onDelete) && (
+                <td style={{ whiteSpace: "nowrap" }}>
+                  {onEdit && (
+                    <button
+                      className="button-small"
+                      onClick={() => onEdit(employee)}
+                      style={{
+                        marginRight: "8px",
+                        padding: "4px 8px",
+                        fontSize: "0.875rem",
+                        background: "#0066cc",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "4px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      Edit
+                    </button>
+                  )}
+                  {onDelete && (
+                    <button
+                      className="button-small"
+                      onClick={() => onDelete(employee)}
+                      style={{
+                        padding: "4px 8px",
+                        fontSize: "0.875rem",
+                        background: "#d32f2f",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "4px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      Delete
+                    </button>
+                  )}
+                </td>
+              )}
             </tr>
           ))}
         </tbody>
