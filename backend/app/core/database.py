@@ -2,8 +2,10 @@ import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
+from app.core.config import settings
+
 def _get_engine():
-    url = os.environ.get("DATABASE_URL", "postgresql://postgres:password@localhost:5432/acme_salary")
+    url = os.environ.get("DATABASE_URL", settings.DATABASE_URL)
     kwargs = {"connect_args": {"check_same_thread": False}} if url.startswith("sqlite") else {}
     return create_engine(url, **kwargs)
 

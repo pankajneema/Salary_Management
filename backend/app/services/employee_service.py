@@ -1,11 +1,13 @@
 import uuid
 from datetime import datetime
 from typing import Optional
+from fastapi.encoders import jsonable_encoder
 from sqlalchemy import func, or_
 from sqlalchemy.orm import Session, joinedload
 
 from app.models.employee import Employee
 from app.models.department import Department
+from app.models.idempotency_key import IdempotencyKey
 from app.schemas.employee import EmployeeCreate, EmployeeUpdate
 
 
@@ -23,12 +25,14 @@ def _serialize_employee(emp: Employee) -> dict:
 def get_employees(
     db: Session,
     page: int = 1,
-    page_size: int = 20,
+    page_size: int = 10,
     search: Optional[str] = None,
     department_id: Optional[str] = None,
     country: Optional[str] = None,
     employment_type: Optional[str] = None,
     currency: Optional[str] = None,
+    sort_by: str = "created_at",
+    sort_order: str = "desc",
 ) -> dict:
     query = (
         db.query(Employee)
@@ -53,6 +57,25 @@ def get_employees(
     if currency:
         query = query.filter(Employee.currency == currency.upper())
 
+    sort_columns = {
+        "employee_id": Employee.employee_id,
+        "full_name": Employee.full_name,
+        "job_title": Employee.job_title,
+        "country": Employee.country,
+        "salary_amount": Employee.salary_amount,
+        "created_at": Employee.created_at,
+        "updated_at": Employee.updated_at,
+        "department_name": Department.name,
+    }
+    sort_column = sort_columns.get(sort_by, Employee.created_at)
+    sort_direction = sort_order.lower()
+    if sort_column is Department.name:
+        query = query.join(Department)
+    if sort_direction == "asc":
+        query = query.order_by(sort_column.asc())
+    else:
+        query = query.order_by(sort_column.desc())
+
     total = query.count()
     items = query.offset((page - 1) * page_size).limit(page_size).all()
 
@@ -74,16 +97,39 @@ def get_employee(db: Session, employee_id: str) -> Optional[Employee]:
     )
 
 
-def create_employee(db: Session, data: EmployeeCreate) -> dict:
+def create_employee(db: Session, data: EmployeeCreate, idempotency_key: Optional[str] = None) -> dict:
+    if idempotency_key:
+        existing_entry = (
+            db.query(IdempotencyKey)
+            .filter(
+                IdempotencyKey.idempotency_key == idempotency_key,
+                IdempotencyKey.operation == "create_employee",
+            )
+            .first()
+        )
+        if existing_entry:
+            return existing_entry.response_payload
+
     emp = Employee(
         id=str(uuid.uuid4()),
         employee_id=_next_employee_id(db),
         **data.model_dump(),
     )
     db.add(emp)
+    db.flush()
+    serialized = _serialize_employee(emp)
+    serialized_payload = jsonable_encoder(serialized)
+    if idempotency_key:
+        db.add(
+            IdempotencyKey(
+                idempotency_key=idempotency_key,
+                operation="create_employee",
+                response_payload=serialized_payload,
+            )
+        )
     db.commit()
     db.refresh(emp)
-    return _serialize_employee(emp)
+    return serialized_payload
 
 
 def update_employee(db: Session, employee_id: str, data: EmployeeUpdate) -> Optional[dict]:

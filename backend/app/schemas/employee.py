@@ -61,3 +61,15 @@ class EmployeeListOut(BaseModel):
     page: int
     page_size: int
     total_pages: int
+
+
+class EmployeeQueryParams(BaseModel):
+    page: int = 1
+    page_size: int = 10
+    search: Optional[str] = None
+    department_id: Optional[str] = None
+    country: Optional[str] = None
+    employment_type: Optional[str] = None
+    currency: Optional[str] = None
+    sort_by: str = "created_at"
+    sort_order: str = "desc"
