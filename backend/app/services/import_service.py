@@ -3,10 +3,14 @@ import io
 import uuid
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
+from typing import Any
+
 from sqlalchemy.orm import Session
 
-from app.models.employee import Employee
+from app.core.database import SessionLocal
 from app.models.department import Department
+from app.models.employee import Employee
+from app.models.import_job import ImportJob
 
 
 REQUIRED_FIELDS = {"full_name", "job_title", "department", "employment_type", "country", "salary_amount", "currency", "date_of_joining"}
@@ -69,6 +73,51 @@ def process_csv_import(db: Session, file_bytes: bytes) -> dict:
         db.commit()
 
     return {"imported": len(employees), "errors": len(errors), "error_details": errors[:50]}
+
+
+def process_csv_import_job(job_id: str, file_bytes: bytes) -> None:
+    db = SessionLocal()
+    job: ImportJob | None = None
+    try:
+        job = db.get(ImportJob, job_id)
+        if not job:
+            return
+
+        job.status = "running"
+        job.started_at = datetime.utcnow()
+        db.commit()
+
+        result = process_csv_import(db, file_bytes)
+        job.status = "completed"
+        job.imported_count = result["imported"]
+        job.error_count = result["errors"]
+        job.error_details = result["error_details"]
+        job.completed_at = datetime.utcnow()
+        job.error_message = None
+        db.commit()
+    except Exception as exc:
+        if job:
+            job.status = "failed"
+            job.error_message = str(exc)
+            job.completed_at = datetime.utcnow()
+            db.commit()
+    finally:
+        db.close()
+
+
+def serialize_import_job(job: ImportJob) -> dict[str, Any]:
+    return {
+        "id": job.id,
+        "filename": job.filename,
+        "status": job.status,
+        "imported_count": job.imported_count,
+        "error_count": job.error_count,
+        "error_details": job.error_details,
+        "error_message": job.error_message,
+        "created_at": job.created_at,
+        "started_at": job.started_at,
+        "completed_at": job.completed_at,
+    }
 
 
 def _validate_row(row: dict, row_num: int) -> list[str]:

@@ -1,24 +1,41 @@
 import csv
 import io
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, UploadFile, File
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session, joinedload
 from typing import Optional
 
 from app.api.deps import get_db_session
 from app.models.employee import Employee
-from app.models.department import Department
+from app.models.import_job import ImportJob
 from app.services import import_service
 
 router = APIRouter(tags=["data"])
 
 
-@router.post("/import/csv")
-async def import_csv(file: UploadFile = File(...), db: Session = Depends(get_db_session)):
+@router.post("/import/csv", status_code=202)
+async def import_csv(
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db_session),
+):
     if not file.filename.endswith(".csv"):
         raise HTTPException(status_code=400, detail="Only CSV files are accepted")
     content = await file.read()
-    return import_service.process_csv_import(db, content)
+    job = ImportJob(filename=file.filename, status="queued")
+    db.add(job)
+    db.commit()
+    db.refresh(job)
+    background_tasks.add_task(import_service.process_csv_import_job, job.id, content)
+    return {"job_id": job.id, "status": job.status, "message": "CSV import queued"}
+
+
+@router.get("/import/csv/{job_id}")
+def get_import_job(job_id: str, db: Session = Depends(get_db_session)):
+    job = db.get(ImportJob, job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Import job not found")
+    return import_service.serialize_import_job(job)
 
 
 @router.get("/export/csv")
