@@ -14,6 +14,12 @@ def _next_employee_id(db: Session) -> str:
     return f"EMP-{count + 1:05d}"
 
 
+def _serialize_employee(emp: Employee) -> dict:
+    payload = {column.name: getattr(emp, column.name) for column in emp.__table__.columns}
+    payload["department_name"] = emp.dept.name if emp.dept else None
+    return payload
+
+
 def get_employees(
     db: Session,
     page: int = 1,
@@ -50,15 +56,8 @@ def get_employees(
     total = query.count()
     items = query.offset((page - 1) * page_size).limit(page_size).all()
 
-    # attach department_name for response
-    result = []
-    for emp in items:
-        emp_dict = {c.name: getattr(emp, c.name) for c in emp.__table__.columns}
-        emp_dict["department_name"] = emp.dept.name if emp.dept else None
-        result.append(emp_dict)
-
     return {
-        "items": result,
+        "items": [_serialize_employee(emp) for emp in items],
         "total": total,
         "page": page,
         "page_size": page_size,
@@ -75,7 +74,7 @@ def get_employee(db: Session, employee_id: str) -> Optional[Employee]:
     )
 
 
-def create_employee(db: Session, data: EmployeeCreate) -> Employee:
+def create_employee(db: Session, data: EmployeeCreate) -> dict:
     emp = Employee(
         id=str(uuid.uuid4()),
         employee_id=_next_employee_id(db),
@@ -84,10 +83,10 @@ def create_employee(db: Session, data: EmployeeCreate) -> Employee:
     db.add(emp)
     db.commit()
     db.refresh(emp)
-    return emp
+    return _serialize_employee(emp)
 
 
-def update_employee(db: Session, employee_id: str, data: EmployeeUpdate) -> Optional[Employee]:
+def update_employee(db: Session, employee_id: str, data: EmployeeUpdate) -> Optional[dict]:
     emp = get_employee(db, employee_id)
     if not emp:
         return None
@@ -96,7 +95,7 @@ def update_employee(db: Session, employee_id: str, data: EmployeeUpdate) -> Opti
     emp.updated_at = datetime.utcnow()
     db.commit()
     db.refresh(emp)
-    return emp
+    return _serialize_employee(emp)
 
 
 def delete_employee(db: Session, employee_id: str) -> bool:

@@ -15,8 +15,8 @@
 │   │  + Search   │  │             │  │+ Charts  │  │Export  │  │
 │   └─────────────┘  └─────────────┘  └──────────┘  └────────┘  │
 │                                                                 │
-│              Next.js  ·  ShadCN UI  ·  Recharts                │
-│              React Query (API caching + state)                  │
+│              Next.js  ·  Recharts                              │
+│              Server-rendered UI + API-backed views             │
 └───────────────────────────────┬─────────────────────────────────┘
                                 │  HTTP / REST
                                 ▼
@@ -112,31 +112,24 @@ acme-salary-management/
 │
 ├── frontend/
 │   ├── app/
-│   │   ├── page.tsx                   # Employee directory (home)
+│   │   ├── page.tsx                   # Employee directory + summary
 │   │   ├── analytics/
 │   │   │   └── page.tsx               # Analytics dashboard
+│   │   ├── globals.css
 │   │   └── layout.tsx
 │   ├── components/
-│   │   ├── employees/
-│   │   │   ├── EmployeeTable.tsx      # Paginated table with search/filter
-│   │   │   ├── EmployeeModal.tsx      # Add / Edit modal
-│   │   │   └── SalaryHistory.tsx      # Per-employee history drawer
-│   │   ├── analytics/
-│   │   │   ├── SalaryByDept.tsx       # Bar chart
-│   │   │   ├── SalaryByCountry.tsx    # Bar/map chart
-│   │   │   └── SalaryDistribution.tsx # Histogram
-│   │   └── ui/                        # ShadCN base components
+│   │   ├── EmployeeTable.tsx          # Paginated table preview
+│   │   └── StatCard.tsx               # Summary metric tile
 │   ├── lib/
-│   │   ├── api.ts                     # Axios/fetch API client
-│   │   └── utils.ts                   # Helpers (currency format etc.)
+│   │   └── api.ts                     # Fetch helpers for the FastAPI backend
 │   ├── package.json
 │   └── .env.example
 │
 ├── docs/
-│   ├── PRD.md                         # Product Requirements Document
+│   ├── prd.md                         # Product Requirements Document
 │   └── ARCHITECTURE.md                # This file
 │
-└── README.md
+└── Readme.md
 ```
 
 ---
@@ -189,7 +182,7 @@ SalaryService
 SQLAlchemy  →  PostgreSQL
     │
     ▼
-200 OK  →  React Query invalidates cache  →  UI refreshes
+200 OK  →  server-rendered page reuses fresh API data  →  UI refreshes
 ```
 
 ---

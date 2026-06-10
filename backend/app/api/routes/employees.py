@@ -35,7 +35,7 @@ def get_employee(employee_id: str, db: Session = Depends(get_db_session)):
     emp = employee_service.get_employee(db, employee_id)
     if not emp:
         raise HTTPException(status_code=404, detail="Employee not found")
-    return emp
+    return employee_service._serialize_employee(emp)
 
 
 @router.put("/{employee_id}", response_model=EmployeeOut)
